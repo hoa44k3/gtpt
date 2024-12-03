@@ -1,0 +1,25 @@
+# Thư mục liên quan đến hệ điều hành
+.DS_Store
+Thumbs.db
+
+# Thư mục tải lên (nếu không muốn đẩy hình ảnh lên)
+uploads/
+
+# Thư mục Composer (nếu sử dụng Composer)
+vendor/
+
+# File cấu hình nhạy cảm
+.env
+config.php
+
+# Cache và log
+cache/
+logs/
+
+# Tệp IDE
+.idea/
+.vscode/
+
+# Tệp tạm
+*.log
+*.tmp
