@@ -1,7 +1,8 @@
 <?php
 session_start();
 
-$conn = new mysqli('localhost', 'root', '', 'gtpt',7307);
+// Kết nối cơ sở dữ liệu
+$conn = new mysqli('localhost', 'root', '', 'gtpt', 7307);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = $_POST['login']; // Username hoặc Email
@@ -18,13 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Kiểm tra mật khẩu
         if (password_verify($password, $user['password'])) {
-            // Lưu thông tin đăng nhập
+            // Lưu thông tin đăng nhập vào session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['avatar'] = $user['avatar'];
 
-            header("Location: phongtro.php"); // Điều hướng đến danh sách phòng trọ
+            // Điều hướng dựa trên vai trò
+            if ($user['role'] == 1) { // Admin
+                header("Location: admin.php");
+            } else { 
+                header("Location: index.php");
+            }
             exit;
         } else {
             echo "Sai mật khẩu!";
@@ -34,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -56,4 +61,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 </body>
 </html>
-
