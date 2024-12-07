@@ -2,12 +2,17 @@
 include 'db.php';
 
 // Lấy danh sách phòng trọ
-$sql = "SELECT m.*, m.area 
-        FROM motel m";
-$sql = "SELECT m.*, d.name as district_name 
+// $sql = "SELECT m.*, m.area 
+//         FROM motel m";
+// $sql = "SELECT m.*, d.name as district_name 
+//         FROM motel m
+//         LEFT JOIN districts d ON m.district_id = d.id";
+// $result = $conn->query($sql);
+$sql = "SELECT m.*, d.name as district_name, m.images 
         FROM motel m
         LEFT JOIN districts d ON m.district_id = d.id";
 $result = $conn->query($sql);
+
 ?>
 
 <!DOCTYPE html>
@@ -29,6 +34,7 @@ $result = $conn->query($sql);
             <th>Diện tích phòng (m<sup>2</sup>)</th>
             <th>Địa chỉ</th>
             <th>Khu vực</th>
+            <th>Ảnh phòng trọ</th>
             <th>Trạng thái</th>
             <th>Hành động</th>
         </tr>
@@ -41,6 +47,13 @@ $result = $conn->query($sql);
                 <td><?= $row['area'] ?> m<sup>2</sup></td>
                 <td><?= $row['address'] ?></td>
                 <td><?= $row['district_name'] ?></td>
+                <td>
+                    <?php if ($row['images']): ?>
+                        <img src="uploads/<?= $row['images'] ?>" alt="Ảnh phòng trọ" width="100" height="100">
+                    <?php else: ?>
+                        <p>Chưa có ảnh</p>
+                    <?php endif; ?>
+                </td>
                 <td><?= $row['approve'] == 1 ? 'Duyệt' : 'Chưa duyệt' ?></td>
                 <td>
                     <a href="sua_phongtro.php?id=<?= $row['id'] ?>">Sửa</a> | 
@@ -53,3 +66,4 @@ $result = $conn->query($sql);
     <a href="admin.php">Quay lại Trang Admin</a>
 </body>
 </html>
+
