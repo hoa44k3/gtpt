@@ -52,6 +52,11 @@ $result = $conn->query("SELECT * FROM users");
         a:hover {
             text-decoration: underline;
         }
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
     </style>
 </head>
 <body>
@@ -61,9 +66,11 @@ $result = $conn->query("SELECT * FROM users");
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Ảnh đại diện</th>
                 <th>Tên</th>
                 <th>Tài khoản</th>
                 <th>Email</th>
+                <th>Mật khẩu</th>
                 <th>Vai trò</th>
                 <th>Hành động</th>
             </tr>
@@ -72,9 +79,18 @@ $result = $conn->query("SELECT * FROM users");
             <?php while ($row = $result->fetch_assoc()): ?>
                 <tr>
                     <td><?= $row['id'] ?></td>
+                    <td>
+                        <?php if (!empty($row['avatar'])): ?>
+                            <img src="storage/uploads/<?= $row['avatar'] ?>" class="avatar" alt="Avatar">
+                        <?php else: ?>
+                            <img src="storage/uploads/default-avatar.jpg" class="avatar" alt="Avatar">
+                        <?php endif; ?>
+                    </td>
+
                     <td><?= $row['name'] ?></td>
                     <td><?= $row['username'] ?></td>
                     <td><?= $row['email'] ?></td>
+                    <td><?= $row['password'] ?></td>
                     <td><?= $row['role'] == 1 ? 'Admin' : 'Người dùng' ?></td>
                     <td>
                         <a href="sua_taikhoan.php?id=<?= $row['id'] ?>">Sửa</a> | 
@@ -88,3 +104,4 @@ $result = $conn->query("SELECT * FROM users");
     <a href="admin.php">Quay lại Trang Admin</a>
 </body>
 </html>
+

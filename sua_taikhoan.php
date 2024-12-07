@@ -40,15 +40,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $email = $_POST['email'];
     $role = $_POST['role'];
+    $avatar = $user['avatar']; // Giữ nguyên ảnh hiện tại nếu không cập nhật
+
+    // Xử lý cập nhật ảnh đại diện
+    if (!empty($_FILES['avatar']['name'])) {
+        $targetDir = "storage/uploads/"; // Thư mục lưu trữ file
+        $fileName = time() . '-' . basename($_FILES['avatar']['name']); // Tạo tên file duy nhất
+        $targetFile = $targetDir . $fileName;
+    
+        // Kiểm tra định dạng file hợp lệ
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        $fileType = mime_content_type($_FILES['avatar']['tmp_name']);
+    
+        if (in_array($fileType, $allowedTypes)) {
+            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $targetFile)) {
+                $avatar = $fileName; // Chỉ lưu tên file vào cơ sở dữ liệu
+            } else {
+                echo "Không thể tải ảnh lên thư mục.";
+                exit;
+            }
+        } else {
+            echo "Định dạng ảnh không được hỗ trợ. Chỉ chấp nhận JPEG, PNG, GIF.";
+            exit;
+        }
+    }
+    
+    
 
     // Nếu có nhập mật khẩu mới, cập nhật mật khẩu
     if (!empty($_POST['password'])) {
         $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-        $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, password = ?, role = ? WHERE id = ?");
-        $stmt->bind_param("ssssii", $name, $username, $email, $password, $role, $id);
+        $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, password = ?, role = ?, avatar = ? WHERE id = ?");
+        $stmt->bind_param("ssssiis", $name, $username, $email, $password, $role, $avatar, $id);
     } else {
-        $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, role = ? WHERE id = ?");
-        $stmt->bind_param("sssii", $name, $username, $email, $role, $id);
+        $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, role = ?, avatar = ? WHERE id = ?");
+        $stmt->bind_param("sssisi", $name, $username, $email, $role, $avatar, $id);
     }
 
     if ($stmt->execute()) {
@@ -65,10 +91,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sửa tài khoản</title>
+    <style>
+        .avatar-preview {
+            margin-top: 10px;
+        }
+        .avatar-preview img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+    <script>
+        function previewAvatar(event) {
+            const preview = document.getElementById('avatar-preview');
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
 </head>
 <body>
     <h2>Sửa thông tin tài khoản</h2>
-    <form action="sua_taikhoan.php?id=<?= $id ?>" method="POST">
+    <form action="sua_taikhoan.php?id=<?= $id ?>" method="POST" enctype="multipart/form-data">
         <label>Tên:</label>
         <input type="text" name="name" value="<?= htmlspecialchars($user['name']) ?>" required><br><br>
 
@@ -87,9 +137,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <option value="2" <?= $user['role'] == 2 ? 'selected' : '' ?>>Người dùng</option>
         </select><br><br>
 
+        <label>Ảnh đại diện:</label>
+        <input type="file" name="avatar" accept="image/*" onchange="previewAvatar(event)"><br><br>
+
+        <div class="avatar-preview">
+        <img id="avatar-preview" src="storage/uploads/<?= htmlspecialchars($user['avatar']) ?>" alt="Avatar hiện tại">
+
+
+        </div><br>
+
         <button type="submit">Lưu thay đổi</button>
     </form>
 
     <a href="tai_khoan.php">Quay lại</a>
 </body>
 </html>
+
+

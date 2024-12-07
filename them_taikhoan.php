@@ -19,9 +19,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
     $role = $_POST['role'];
+    
+    // Xử lý tải ảnh lên
+    $avatar = null;
+    if (!empty($_FILES['avatar']['name'])) {
+        $targetDir = "storage/uploads/";
+        $fileName = time() . '-' . basename($_FILES['avatar']['name']); // Thêm thời gian để tránh trùng tên
+        $targetFile = $targetDir . $fileName;
 
-    $stmt = $conn->prepare("INSERT INTO users (name, username, email, password, role) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssi", $name, $username, $email, $password, $role);
+        // Kiểm tra và di chuyển file tải lên
+        if (move_uploaded_file($_FILES['avatar']['tmp_name'], $targetFile)) {
+            $avatar = $fileName; // Lưu tên file vào cơ sở dữ liệu
+        } else {
+            echo "Tải lên ảnh thất bại.";
+            exit;
+        }
+    }
+
+    // Chuẩn bị và thực thi câu lệnh SQL
+    $stmt = $conn->prepare("INSERT INTO users (name, username, email, password, role, avatar) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssss", $name, $username, $email, $password, $role, $avatar);
 
     if ($stmt->execute()) {
         header("Location: tai_khoan.php");
@@ -31,16 +48,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thêm tài khoản</title>
+    <style>
+        .avatar-preview {
+            margin-top: 10px;
+        }
+        .avatar-preview img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+    <script>
+        function previewAvatar(event) {
+            const preview = document.getElementById('avatar-preview');
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
 </head>
 <body>
     <h2>Thêm tài khoản</h2>
-    <form action="qly_themtaikhoan.php" method="POST">
+    <form action="them_taikhoan.php" method="POST" enctype="multipart/form-data">
         <label>Tên:</label>
         <input type="text" name="name" required><br><br>
 
@@ -59,9 +101,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <option value="2">Người dùng</option>
         </select><br><br>
 
+        <label>Ảnh đại diện:</label>
+        <input type="file" name="avatar" accept="image/*" onchange="previewAvatar(event)"><br><br>
+
+        <div class="avatar-preview">
+            <img id="avatar-preview" src="storage/uploads/default-avatar.jpg" alt="Avatar Preview">
+        </div><br>
+
         <button type="submit">Thêm</button>
     </form>
 
     <a href="tai_khoan.php">Quay lại</a>
 </body>
 </html>
+
